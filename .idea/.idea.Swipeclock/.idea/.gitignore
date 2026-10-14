@@ -1,0 +1,62 @@
+# Default ignored files
+/shelf/
+/workspace.xml
+# Editor-based HTTP Client requests
+/httpRequests/
+# Rider ignored files
+/modules.xml
+/contentModel.xml
+/projectSettingsUpdater.xml
+/.idea.Swipeclock.iml
+# Ignored default folder with query files
+/queries/
+# Datasource local storage ignored files
+/dataSources/
+/dataSources.local.xml
+
+# .NET build output
+bin/
+obj/
+out/
+artifacts/
+
+# Rider / JetBrains
+.idea/**/workspace.xml
+.idea/**/tasks.xml
+.idea/**/shelf/
+.idea/**/dataSources/
+.idea/**/dataSources.local.xml
+.idea/**/awsToolkit.xml
+.idea/**/dbnavigator.xml
+.idea/**/indexLayout.xml
+
+# User-specific IDE settings
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# Visual Studio
+.vs/
+
+# Rider caches and temporary files
+.idea/**/caches/
+.idea/**/system/
+
+# Test results
+TestResults/
+*.trx
+
+# NuGet packages
+*.nupkg
+packages/
+
+# OS-specific
+.DS_Store
+Thumbs.db
+
+# Secrets and local configuration
+.env
+.env.local
+appsettings.Development.local.json
+
