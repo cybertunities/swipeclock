@@ -7,4 +7,8 @@
         <Nullable>enable</Nullable>
     </PropertyGroup>
 
+    <ItemGroup>
+      <PackageReference Include="Galosys.Foundation.AspNetCore" Version="26.10.20.1" />
+    </ItemGroup>
+
 </Project>

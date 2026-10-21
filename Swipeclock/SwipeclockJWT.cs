@@ -1,5 +1,6 @@
 using System.Security.Cryptography;
 using System.Text;
+using System.Net.Http.Headers;
 
 namespace Swipeclock;
 
@@ -92,5 +93,39 @@ public class JwtSignature
             payloadJson,
             SWIPECLOCK_SECRET
         );
+    }
+
+    public static async Task<string?> GetUserTokenAsync(string jwtToken)
+    {
+        using var client = new HttpClient();
+
+        using var request = new HttpRequestMessage(
+            HttpMethod.Post,
+            "https://clock.payrollservers.us/AuthenticationService/oauth2/userToken");
+
+        request.Headers.Authorization =
+            new AuthenticationHeaderValue("Bearer", jwtToken);
+
+        request.Content = new StringContent(
+            "{}",
+            Encoding.UTF8,
+            "application/json");
+
+        using var response = await client.SendAsync(request);
+
+        var responseBody = await response.Content.ReadAsStringAsync();
+
+        response.EnsureSuccessStatusCode();
+        
+        try
+        {
+            string? tokenValue = JsonDocument.Parse(responseBody).RootElement.GetProperty("token").GetString();
+            return tokenValue;
+        }
+        catch (KeyNotFoundException e)
+        {
+            Console.WriteLine(e);
+            throw;
+        }
     }
 }

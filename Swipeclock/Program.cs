@@ -1,8 +1,11 @@
-﻿
+using Swipeclock;
+
 // Part 1 - authenticate Swipeclock
 // SEE: https://developer.swipeclock.com/documentation/authentication/authentication-using-a-jwt-token/
 
-// TODO: Part 1a - generate JWT token
+// Part 1a - generate JWT token
+string jwt = JwtSignature.CreateJwt();
+Console.WriteLine($"Generated JWT Token: {jwt}");
 
 // TODO: Part 1b - use JWT token to get an API token
 // POST https://clock.payrollservers.us/AuthenticationService/oauth2/userToken
@@ -10,19 +13,38 @@
 // Headers: Accept application/json
 // Content-Type application/json
 
+string? apiToken = await JwtSignature.GetUserTokenAsync(jwt);
+
+if (apiToken == null)
+{
+    Console.WriteLine("Failed to retrieve API token.");
+    return;
+}
+
+Console.WriteLine($"Generated API Token: {apiToken}");
+
 // TODO: pull Timesheet Data
 // SEE: https://api.workforcehub.com/swagger/index.html#overview--authentication
 
-// TODO: push data to Big Query
+var endpoint = "https://api.workforcehub.com/api/company";
 
-using System.Text.Json;
-using Swipeclock;
-
-public class Program
+var queryString = new Dictionary<string, string>()
 {
-    public static void Main(string[] args)
+    { "idType", "CompanyCode" }
+};
+
+await SwipeclockHelper.HttpGetAsync(endpoint, queryString, apiToken)
+    .ContinueWith(task =>
     {
-        string jwt = JwtSignature.CreateJwt();
-        Console.WriteLine($"Generated JWT Token: {jwt}");
-    }
-}
+        if (task.IsCompletedSuccessfully)
+        {
+            string responseBody = task.Result;
+            Console.WriteLine($"Timesheet Data: {responseBody}");
+        }
+        else
+        {
+            Console.WriteLine($"Error retrieving timesheet data: {task.Exception?.Message}");
+        }
+    });
+
+// TODO: push data to Big Query
