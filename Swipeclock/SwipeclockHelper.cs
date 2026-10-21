@@ -26,7 +26,7 @@ public class SwipeclockHelper
         // request.Headers.Authorization = new AuthenticationHeaderValue(JwtBearerDefaults.AuthenticationScheme, token);
         
         client.DefaultRequestHeaders.Add("Authorization", "Bearer " + token);
-        client.DefaultRequestHeaders.Add("x-api-version", "1");
+        client.DefaultRequestHeaders.Add("x-api-version", API_VERSION);
         client.DefaultRequestHeaders.Add("x-integration-partner-id", PARTNER_ID);
         // client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
         

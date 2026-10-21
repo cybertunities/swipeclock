@@ -26,6 +26,8 @@ internal class SwipeclockJwtPayload
     public string sub { get; set; }
 
     public long exp { get; set; }
+
+    public object siteInfo { get; set; }
     // internal SwipeclockSiteInfo siteInfo { get; set; }
 }
 
@@ -69,20 +71,27 @@ public class JwtSignature
 {
     const string SWIPECLOCK_SECRET = "qnWrACmWiE1MBOrB92NlNwAaafMru3a7pC2s25kSPNnbI6aQlELM1ad9vrIIaHoI";
 
-    public static string CreateJwt()
+    public static string CreateJwt(int siteId)
     {
-        var header = new SwipeclockJwtHeader
+        var header = new
         {
             alg = "HS256",
             typ = "JWT"
         };
 
-        var payload = new SwipeclockJwtPayload
+        var payload = new
         {
-            iss = 2385,
-            product = "twppartner",
+            iss = "2385",
             sub = "partner",
-            exp = DateTimeOffset.UtcNow.AddMinutes(4).ToUnixTimeSeconds()
+            exp = DateTimeOffset.UtcNow
+                .AddMinutes(3)
+                .ToUnixTimeSeconds(),
+            product = "twppartner",
+            siteInfo = new
+            {
+                type = "id",
+                id = siteId
+            }
         };
 
         string headerJson = JsonSerializer.Serialize(header);
@@ -95,37 +104,48 @@ public class JwtSignature
         );
     }
 
-    public static async Task<string?> GetUserTokenAsync(string jwtToken)
-    {
-        using var client = new HttpClient();
 
-        using var request = new HttpRequestMessage(
-            HttpMethod.Post,
-            "https://clock.payrollservers.us/AuthenticationService/oauth2/userToken");
+    public static async Task<string> GetUserTokenAsync(
+        HttpClient client,
+        string jwtToken)
+    {
+        const string url =
+            "https://clock.payrollservers.us/AuthenticationService/oauth2/usertoken";
+
+        using var request = new HttpRequestMessage(HttpMethod.Post, url);
 
         request.Headers.Authorization =
             new AuthenticationHeaderValue("Bearer", jwtToken);
 
-        request.Content = new StringContent(
-            "{}",
-            Encoding.UTF8,
-            "application/json");
+        request.Headers.Accept.Add(
+            new MediaTypeWithQualityHeaderValue("application/json"));
 
         using var response = await client.SendAsync(request);
 
-        var responseBody = await response.Content.ReadAsStringAsync();
+        string responseBody = await response.Content.ReadAsStringAsync();
 
-        response.EnsureSuccessStatusCode();
-        
-        try
+        if (!response.IsSuccessStatusCode)
         {
-            string? tokenValue = JsonDocument.Parse(responseBody).RootElement.GetProperty("token").GetString();
-            return tokenValue;
+            throw new HttpRequestException(
+                $"Swipeclock authentication failed ({(int)response.StatusCode}): {responseBody}");
         }
-        catch (KeyNotFoundException e)
+
+        using var json = JsonDocument.Parse(responseBody);
+
+        if (!json.RootElement.TryGetProperty("token", out var tokenElement))
         {
-            Console.WriteLine(e);
-            throw;
+            throw new InvalidOperationException(
+                "Swipeclock authentication response did not contain a token.");
         }
+
+        string? token = tokenElement.GetString();
+
+        if (string.IsNullOrWhiteSpace(token))
+        {
+            throw new InvalidOperationException(
+                "Swipeclock returned an empty authentication token.");
+        }
+
+        return token;
     }
 }
